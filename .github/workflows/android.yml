@@ -1,0 +1,71 @@
+name: Gerar APK Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Preparar assinatura
+        env:
+          KS_B64: ${{ secrets.REFRICAR_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.REFRICAR_KEYSTORE_PASSWORD }}
+        run: |
+          KS="$RUNNER_TEMP/refricar-release.keystore"
+          if [ -n "$KS_B64" ] && [ -n "$KS_PASS" ]; then
+            echo "$KS_B64" | base64 -d > "$KS"
+            echo "REFRICAR_KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+            echo "ASSINATURA=definitiva" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Segredos REFRICAR_KEYSTORE_BASE64 e REFRICAR_KEYSTORE_PASSWORD não cadastrados. Usando assinatura provisória (para atualizar o app será preciso desinstalar antes)."
+            PASS="$(openssl rand -hex 16)"
+            echo "::add-mask::$PASS"
+            keytool -genkeypair -keystore "$KS" -alias refricar -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$PASS" -keypass "$PASS" -dname "CN=REFRICAR, O=REFRICAR, C=BR"
+            echo "REFRICAR_KEYSTORE_PASSWORD=$PASS" >> "$GITHUB_ENV"
+            echo "ASSINATURA=provisoria" >> "$GITHUB_ENV"
+          fi
+          echo "REFRICAR_KEYSTORE=$KS" >> "$GITHUB_ENV"
+
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Preparar arquivo
+        run: cp android/app/build/outputs/apk/release/app-release.apk REFRICAR.apk
+
+      - name: Publicar na página de versões
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-v1.0.${{ github.run_number }}
+          name: REFRICAR para Android — versão 1.0.${{ github.run_number }}
+          make_latest: true
+          files: REFRICAR.apk
+          body: |
+            Aplicativo Android do REFRICAR — Gestão de Orçamentos (assinatura ${{ env.ASSINATURA }}).
+
+            **Baixar:** toque em `REFRICAR.apk` logo abaixo, abra o arquivo no celular e confirme a instalação
+            (se o Android pedir, permita "instalar apps desta fonte").
+
+            O app abre o sistema publicado em https://scoffyt.github.io/REFRICAR/ e as melhorias enviadas ao
+            GitHub aparecem no app automaticamente, sem precisar instalar de novo.

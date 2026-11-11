@@ -37,6 +37,18 @@ Se `config.js` estiver vazio, o próprio site pede a URL e a chave na primeira v
 **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save.**
 O site fica em `https://<seu-usuario>.github.io/REFRICAR/`.
 
+## Aplicativo Android (APK)
+
+**Baixar:** https://github.com/scoffyt/REFRICAR/releases/latest/download/REFRICAR.apk
+
+- O app abre o site publicado no GitHub Pages, então **tudo que for enviado ao GitHub aparece no app sozinho**, sem reinstalar.
+- No app, o PDF é salvo em `Downloads/REFRICAR` e o botão do WhatsApp já envia o PDF anexado na conversa do cliente.
+- O APK é gerado pelo GitHub Actions (`.github/workflows/android.yml`) sempre que algo muda na pasta `android/`,
+  ou manualmente em **Actions → Gerar APK Android → Run workflow**.
+- Assinatura: cadastre em **Settings → Secrets and variables → Actions** os segredos `REFRICAR_KEYSTORE_BASE64`
+  e `REFRICAR_KEYSTORE_PASSWORD`. Sem eles o APK sai com assinatura provisória (para instalar uma versão nova
+  do APK será preciso desinstalar a anterior). A chave nunca deve ser enviada ao repositório.
+
 ## Segurança
 
 A chave `anon` é pública por natureza. Os dados ficam protegidos porque:

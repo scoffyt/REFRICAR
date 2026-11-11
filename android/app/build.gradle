@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace 'com.refricar.orcamentos'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.refricar.orcamentos"
+        minSdk 24
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0." + runNumber
+    }
+
+    signingConfigs {
+        release {
+            // A chave de assinatura NÃO fica no repositório: o GitHub Actions a cria a partir dos segredos.
+            storeFile file(System.getenv("REFRICAR_KEYSTORE") ?: "../refricar-release.keystore")
+            storePassword System.getenv("REFRICAR_KEYSTORE_PASSWORD") ?: ""
+            keyAlias "refricar"
+            keyPassword System.getenv("REFRICAR_KEYSTORE_PASSWORD") ?: ""
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.13.1'
+}

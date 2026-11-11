@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Tema" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/fundo_inicial</item>
+        <item name="android:statusBarColor">@color/preto</item>
+        <item name="android:navigationBarColor">@color/branco</item>
+        <item name="android:colorAccent">@color/azul</item>
+        <item name="android:colorPrimary">@color/marinho</item>
+    </style>
+</resources>
